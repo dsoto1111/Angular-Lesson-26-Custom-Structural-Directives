@@ -1,36 +1,34 @@
-import { Directive, Input, HostBinding, HostListener, ElementRef, Output, EventEmitter } from '@angular/core';
+import { Directive, Input, HostBinding, HostListener, ElementRef, AfterViewInit } from '@angular/core';
 
 @Directive({
     selector: '[appDropdown]'
 })
-export class DropdownDirective {
+export class DropdownDirective implements AfterViewInit {
 
     fromButton: boolean = false;
+    dropped: boolean = false;
 
-    @Input() get appDropdown(): boolean {
-        return this._appDropdown;
-    }
-     set appDropdown(value: boolean) {
-        this._appDropdown = value;
+    @Input() set appDropdown(value: boolean) {
         this.fromButton = true;
     }
 
-    @Output() appDropdownChange = new EventEmitter<boolean>();
-
-    private _appDropdown!: boolean; 
-
     constructor(private el: ElementRef) { }
+
+    ngAfterViewInit(): void {
+        this.fromButton = false;
+    }
 
     @HostBinding('class.drop') drop: boolean = false;
 
     @HostListener('document:click', ['$event']) click(event: Event) {
-        let contained = false;
-        contained = this.el.nativeElement.contains(event.target);
         if (this.fromButton) {
-            this.drop = this._appDropdown;
+            this.dropped = !this.dropped;
+            this.drop = this.dropped
         } else {
-            this.drop = contained;
-            this.appDropdownChange.emit(contained);
+            if (!this.el.nativeElement.contains(event.target)) {
+                this.dropped = false;
+                this.drop = this.dropped;
+            }
         }
         this.fromButton = false;
     }
